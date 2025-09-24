@@ -1,21 +1,25 @@
 const express = require("express");
-const { adminAuth, userAuth } = require("./middleware/auth");
+
 const app = express();
 
 // middleware
-app.use("/admin", adminAuth); // => for all admin routes 
 
 // routes
-app.get("/user",userAuth, (req, res) => { // => for specific routes 
+app.get("/user", (req, res) => {
+  throw new Error("ksdfkjskf");
   res.send("get data");
 });
-
-app.get("/admin/getData", (req, res) => {
-  res.send("get data");
+app.get("/user2", (req, res) => {
+  try {
+    throw new Error("ksdfkjskf");
+    res.send("get data");
+  } catch (error) {
+    res.status(500).send("Something went wrong 02");
+  }
 });
 
-app.get("/admin/deleteData", (req, res) => {
-  res.send("delete data");
+app.use("/", (err, req, res, next) => {
+  res.status(500).send("Something went wrong.");
 });
 
 app.listen(7000, () => {
