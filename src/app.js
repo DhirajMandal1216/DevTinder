@@ -10,7 +10,7 @@ app.post("/signup", async (req, res) => {
     await user.save();
     res.status(201).send("User signup successfully");
   } catch (error) {
-    res.status(400).send("Error accor during user signup", error.message);
+    res.status(500).send("SignUp Error :" + error.message);
   }
 });
 
