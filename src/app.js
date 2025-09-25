@@ -1,34 +1,33 @@
 const express = require("express");
-
+const connectDb = require("./config/database");
+const User = require("./models/users");
 const app = express();
 
-// middleware
-
-// routes
-app.get("/user", (req, res) => {
-  throw new Error("ksdfkjskf");
-  res.send("get data");
-});
-app.get("/user2", (req, res) => {
+app.post("/signup", async (req, res) => {
   try {
-    throw new Error("ksdfkjskf");
-    res.send("get data");
+    const user = new User({
+      firstName: "Dhiraj",
+      lastName: "mandal",
+      email: "dhiraj@gamil.com",
+      password: "Dhiraj@16",
+      age: 20,
+      gender: "Male",
+    });
+
+    await user.save();
+    res.status(201).send("User signup successfully");
   } catch (error) {
-    res.status(500).send("Something went wrong 02");
+    res.status(400).send("Error accor during user signup", error.message);
   }
 });
 
-// Wildcard route for 404(NOt found)
-app.get(/.*/, (req, res) => {
-  res.status(404).send("404 Not Found");
-});
-
-// Error handling middleware
-app.use( (err, req, res, next) => {
-  res.status(500).send("Something went wrong.");
-});
-
-
-app.listen(7000, () => {
-  console.log("Server is running on port 7777..");
-});
+connectDb()
+  .then(() => {
+    console.log("Database connected");
+    app.listen(7000, () => {
+      console.log("Server is running on port 7777..");
+    });
+  })
+  .catch((err) => {
+    console.log("Database cannot be connected.");
+  });
