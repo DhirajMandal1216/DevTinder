@@ -1,16 +1,62 @@
 const express = require("express");
 const connectDb = require("./config/database");
 const User = require("./models/users");
+const { validateSignUp } = require("./utils/validators/userValidation");
+const bcrypt = require("bcrypt");
 const app = express();
-
 app.use(express.json());
+
 app.post("/signup", async (req, res) => {
   try {
-    const user = new User(req.body);
+    // 1. Custom business validation
+    validateSignUp(req);
+
+    // 2. Whitelist fields
+    const { firstName, lastName, email, password } = req.body;
+
+    // 3. Encrypt password (important!)
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // 4. Create user
+    const user = new User({
+      firstName,
+      lastName,
+      email,
+      password: hashedPassword,
+    });
+
     await user.save();
     res.status(201).send("User signup successfully");
   } catch (error) {
-    res.status(500).send("SignUp Error :" + error.message);
+    res.status(500).send("ERROR : " + error.message);
+  }
+});
+
+// login
+app.post("/login",async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // validate email format 
+    if (!validator.isEmail(email)) {
+      throw new Error("Invalid input");
+    }
+
+    // find user is exist or not
+    const user = await User.findOne({ email });
+    if (!user) {
+      throw new Error("Invalid credential");
+    }
+    // validate password is correct or not
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    if (isValidPassword) {
+      res.status(200).send("LogIn successfully !!");
+    } else {
+      throw new Error("invalid credential");
+    }
+
+  } catch (error) {
+    res.status(500).send("ERROR : " + error.message);
   }
 });
 
@@ -52,11 +98,21 @@ app.patch("/user", async (req, res) => {
   const userId = req.body.userId;
   const data = req.body;
   try {
+    const ALLOW_Update = ["firstName", "lastName", "age", "gender", "photoUrl"];
+    const isUpdateAllowed = Object.keys(data).every((k) => {
+      ALLOW_Update.includes(k);
+    });
+    if (!isUpdateAllowed) {
+      throw new Error("update not Allowed.");
+    }
+    if (data.skills.length > 10) {
+      throw new Error("skill not added.");
+    }
     const user = await User.findOneAndUpdate({ _id: userId }, data);
     console.log(user);
     res.status(200).send("data updated successfully");
   } catch (error) {
-    res.status(500).send("Something went wrong.")
+    res.status(500).send("Something went wrong.");
   }
 });
 connectDb()
