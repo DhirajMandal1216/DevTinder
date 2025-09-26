@@ -3,8 +3,12 @@ const connectDb = require("./config/database");
 const User = require("./models/users");
 const { validateSignUp } = require("./utils/validators/userValidation");
 const bcrypt = require("bcrypt");
+const validator = require("validator");
+const cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken");
 const app = express();
 app.use(express.json());
+app.use(cookieParser());
 
 app.post("/signup", async (req, res) => {
   try {
@@ -33,11 +37,11 @@ app.post("/signup", async (req, res) => {
 });
 
 // login
-app.post("/login",async (req, res) => {
+app.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // validate email format 
+    // validate email format
     if (!validator.isEmail(email)) {
       throw new Error("Invalid input");
     }
@@ -50,14 +54,34 @@ app.post("/login",async (req, res) => {
     // validate password is correct or not
     const isValidPassword = await bcrypt.compare(password, user.password);
     if (isValidPassword) {
-      res.status(200).send("LogIn successfully !!");
+      // jwt token
+      const token = await jwt.sign({ _id: user._id }, "jhnlij34345jkhjkhk");
+
+      // send cookie
+      res.cookie("token", token);
+      res.send("login successfully!!");
     } else {
       throw new Error("invalid credential");
     }
-
   } catch (error) {
     res.status(500).send("ERROR : " + error.message);
   }
+});
+
+// profile
+app.get("/profile", async (req, res) => {
+  const cookies = req.cookies;
+  const { token } = cookies;
+  if (!token) {
+    res.send("invalid token");
+  }
+  const decodeToken = jwt.verify(token, "jhnlij34345jkhjkhk");
+  const id = decodeToken;
+  const user = await User.findById(id);
+  if (!user) {
+    res.send("user not found");
+  }
+  res.send(user);
 });
 
 // user api
