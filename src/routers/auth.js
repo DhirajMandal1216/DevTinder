@@ -31,7 +31,9 @@ authRouter.post("/signup", async (req, res) => {
     // send request
     res.status(201).send("SignUp successful !!.");
   } catch (error) {
-    res.status(400).json({ message: "Something went wrong", error: error.message });
+    res
+      .status(400)
+      .json({ message: "Something went wrong", error: error.message });
   }
 });
 
@@ -42,7 +44,7 @@ authRouter.post("/login", async (req, res) => {
 
     // validate email
     if (!validator.isEmail(email)) {
-     return  res.status(400).send("Invalid input");
+      return res.status(400).send("Invalid input");
     }
     // find user from db
     const user = await User.findOne({ email });
@@ -64,13 +66,21 @@ authRouter.post("/login", async (req, res) => {
       });
 
       // send response
-      return  res.status(200).json({ message: "LogIn Successfully.!!" });
+      return res.status(200).json({ message: "LogIn Successfully.!!" });
     } else {
-     return  res.status(400).send("Invalid credential");
+      return res.status(400).send("Invalid credential");
     }
   } catch (error) {
-   res.status(400).json({ message: "Something went wrong", error: error.message });
+    res
+      .status(400)
+      .json({ message: "Something went wrong", error: error.message });
   }
+});
+
+// logout
+authRouter.post("/logout", (req, res) => {
+  res.cookie("token", null, { expires: new Date(Date.now()) });
+  res.send("Logout successful !!");
 });
 
 module.exports = authRouter;
